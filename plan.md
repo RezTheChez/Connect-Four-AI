@@ -1,4 +1,4 @@
-###Understanding components to the AI###
+### Understanding components to the AI
 - How minimax works
   - Game trees
     - Terminal vs non-terminal nodes
@@ -8,7 +8,7 @@
     - Search depth
     - Heuristic evaluation function: how do we know how close we are to winning?
 
-###Implementation plan###
+### Implementation plan
 1. Game logic
 2. Design a heuristic
 3. Write a heuristic evaluation function 
@@ -29,7 +29,7 @@
 - Difficulty settings
 - Website to display GitHub work or this game
 
-###Resources### 
+### Resources 
 - https://roadtolarissa.com/connect-4-ai-how-it-works/
 - http://blog.gamesolver.org/solving-connect-four/01-introduction/
 - Helpful pseudocode: https://www.geeksforgeeks.org/finding-optimal-move-in-tic-tac-toe-using-minimax-algorithm-in-game-theory/, https://www.geeksforgeeks.org/minimax-algorithm-in-game-theory-set-4-alpha-beta-pruning/?ref=rp 
