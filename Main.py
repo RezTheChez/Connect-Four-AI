@@ -97,6 +97,7 @@ while not gameOver:
                 board = np.zeros((boardRows, boardCols))
                 pygame.display.set_icon(screen)
                 turn = 0
+                drawBoard(board)
 
             elif event.key == pygame.K_1:
                 if turn == 0:
