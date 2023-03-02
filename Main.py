@@ -104,11 +104,19 @@ while not gameOver:
                     movePiece(board, row, 0, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 0)
                     movePiece(board, row, 0, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_2:
                 if turn == 0:
@@ -116,11 +124,19 @@ while not gameOver:
                     movePiece(board, row, 1, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 1)
                     movePiece(board, row, 1, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_3:
                 if turn == 0:
@@ -128,11 +144,19 @@ while not gameOver:
                     movePiece(board, row, 2, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 2)
                     movePiece(board, row, 2, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_4:
                 if turn == 0:
@@ -140,11 +164,19 @@ while not gameOver:
                     movePiece(board, row, 3, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 3)
                     movePiece(board, row, 3, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_5:
                 if turn == 0:
@@ -152,11 +184,19 @@ while not gameOver:
                     movePiece(board, row, 4, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 4)
                     movePiece(board, row, 4, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_6:
                 if turn == 0:
@@ -164,11 +204,19 @@ while not gameOver:
                     movePiece(board, row, 5, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 5)
                     movePiece(board, row, 5, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
             elif event.key == pygame.K_7:
                 if turn == 0:
@@ -176,11 +224,19 @@ while not gameOver:
                     movePiece(board, row, 6, 1)
                     drawBoard(board)
                     turn = 1
+                    
+                    if winningMove(board, 1):
+                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
+                        gameOver = True
                 else:
                     row = findNextOpenRow(board, 6)
                     movePiece(board, row, 6, 2)
                     drawBoard(board)
                     turn = 0
+                    
+                    if winningMove(board, 2):
+                        renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
+                        gameOver = True
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # Player 1
