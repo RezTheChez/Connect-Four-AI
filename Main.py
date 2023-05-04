@@ -23,6 +23,7 @@ blackColor = (0, 0, 0)
 pieceRadius = int(squareSize / 2 - 5)
 windowLength = 4
 totalMoves = 0
+defaultDepth = 4
 
 empty = 0
 player = 1
@@ -291,14 +292,14 @@ while not gameOver:
                 # Changing Turns
                 turn = 2
                 #print(np.flip(board, 0))
-                print(calculateEvaluation(player))
+                print(calculateEvaluation(defaultDepth, player))
 
             # Player 2
             if turn == ai and not gameOver:
                 pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
                 # Getting Place To Move To
                 mousePosX = event.pos[0]
-                col, eval = minimax(board, 4, ai)
+                col, eval = minimax(board, defaultDepth, ai)
 
                 # Moving Piece
                 if checkMove(board, col):
