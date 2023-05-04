@@ -177,7 +177,6 @@ def minimax(board, depth, piece):
                 boardCopy2 = np.copy(boardCopy)
                 row = findNextOpenRow(board, col)
                 movePiece(boardCopy2, row, col, ai)
-                print("AI, DEPTH: " + str(depth))
                 newScore = minimax(boardCopy2, depth - 1, player)[1]
 
                 if newScore < score:
@@ -195,7 +194,6 @@ def minimax(board, depth, piece):
                 boardCopy2 = np.copy(boardCopy)
                 row = findNextOpenRow(board, col)
                 movePiece(boardCopy2, row, col, player)
-                print("PLAYER, DEPTH: " + str(depth))
                 newScore = minimax(boardCopy2, depth - 1, ai)[1]
 
                 if newScore > score:
@@ -207,7 +205,7 @@ def minimax(board, depth, piece):
             return column, score
 
 def calculateEvaluation(piece):
-    eval = evaluateBoard(board, player)
+    eval = minimax(board, depth, player)[2]
 
     if eval >= 0:
         eval = "+" + str(eval)
@@ -315,7 +313,6 @@ while not gameOver:
                     # Changing Turns
                     turn = 1
                     #print(np.flip(board, 0))
-                    print(str(eval))
     if gameOver:
         gameOver = True
         renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
