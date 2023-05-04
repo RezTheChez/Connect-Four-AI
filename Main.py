@@ -205,16 +205,6 @@ def minimax(board, depth, piece):
 
             return column, score
 
-def calculateEvaluation(piece):
-    eval = minimax(board, depth, player)[2]
-
-    if eval >= 0:
-        eval = "+" + str(eval)
-    else:
-        eval = str(eval)
-
-    return "Board evaluation: " + eval
-
 def drawBoard(board):
     for c in range(boardCols):
         for r in range(boardRows):
@@ -292,7 +282,6 @@ while not gameOver:
                 # Changing Turns
                 turn = 2
                 #print(np.flip(board, 0))
-                print(calculateEvaluation(defaultDepth, player))
 
             # Player 2
             if turn == ai and not gameOver:
