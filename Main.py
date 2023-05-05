@@ -23,7 +23,7 @@ blackColor = (0, 0, 0)
 pieceRadius = int(squareSize / 2 - 5)
 windowLength = 4
 totalMoves = 0
-defaultDepth = 4
+defaultDepth = 5
 
 empty = 0
 player = 1
@@ -154,7 +154,7 @@ def evaluateBoard(board, piece):
     return score
 
 
-def minimax(board, depth, piece):
+def minimax(board, depth, piece, alpha, beta):
     score = 0
     opposingPiece = player
     validLocations = getValidLocations(board)
@@ -178,13 +178,17 @@ def minimax(board, depth, piece):
                 boardCopy2 = np.copy(boardCopy)
                 row = findNextOpenRow(board, col)
                 movePiece(boardCopy2, row, col, ai)
-                newScore = minimax(boardCopy2, depth - 1, player)[1]
+                newScore = minimax(boardCopy2, depth - 1, player, -1000, 1000)[1]
 
                 if newScore < score:
                     score = newScore
                     column = col
 
                 score = min(newScore, score)
+                beta = min(beta, score)
+
+                if alpha >= beta:
+                    break
             return column, score
         else:
             score = -1000
@@ -195,13 +199,17 @@ def minimax(board, depth, piece):
                 boardCopy2 = np.copy(boardCopy)
                 row = findNextOpenRow(board, col)
                 movePiece(boardCopy2, row, col, player)
-                newScore = minimax(boardCopy2, depth - 1, ai)[1]
+                newScore = minimax(boardCopy2, depth - 1, ai, -1000, 1000)[1]
 
                 if newScore > score:
                     score = newScore
                     column = col
 
                 score = max(newScore, score)
+                alpha = max(alpha, score)
+
+                if alpha >= beta:
+                    break
 
             return column, score
 
@@ -288,7 +296,7 @@ while not gameOver:
                 pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
                 # Getting Place To Move To
                 mousePosX = event.pos[0]
-                col, eval = minimax(board, defaultDepth, ai)
+                col, eval = minimax(board, defaultDepth, ai, -1000, 1000)
 
                 # Moving Piece
                 if checkMove(board, col):
