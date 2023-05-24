@@ -1,318 +1,159 @@
-import numpy as np
-import sys
-import math
-import pygame
-import random
-import time
+import pygame, sys
+from element import *
+from connectFour import *
 
-from aiplayer import *
-
-gameOver = False
-turn = 1
-player = 0
-boardRows = 6
-boardCols = 7
-squareSize = 100
-screenWidth = boardCols * squareSize
-screenHeight = (boardRows + 1) * squareSize
-screenSize = (screenWidth, screenHeight)
-redColor = (255, 0, 0)
-yellowColor = (255, 255, 0)
-blueColor = (0, 0, 255)
-blackColor = (0, 0, 0)
-pieceRadius = int(squareSize / 2 - 5)
-windowLength = 4
-totalMoves = 0
-defaultDepth = 5
-
-empty = 0
-player = 1
-ai = 2
 
 pygame.init()
-font = pygame.font.SysFont("display", 75, bold=True)
 
-# Initialize Board
-def createBoard():
-    board = np.zeros((boardRows, boardCols))
-    return board
+screen = pygame.display.set_mode((800, 700))
+pygame.display.set_caption("Menu")
+skill = 30
+defensiveness = 30
+aggressiveness = 30
+outputDefensiveness = 1
+outputAggressiveness = 1
+depth = 1
+settingsPage = 1
 
+def getFont(size):
+    return pygame.font.SysFont("calibri", size, bold=True)
 
-def movePiece(board, row, col, piece):
-    board[row][col] = piece
+def renderText(screen, color, text, xPos, yPos, size):
+    label = getFont(size).render(text, 1, color)
+    screen.blit(label, (xPos, yPos))
 
+def Button2(screen, x, y, width, height, color, action=None):
+    global skill, defensiveness, aggressiveness
+    mousePos = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
 
-def checkMove(board, col):
-    return board[boardRows - 1][col] == 0
+    pygame.draw.rect(screen, color, (x, y, width, height))
 
+    if x + width > mousePos[0] > x and y + height + 12 > mousePos[1] > y - 12:
+        if click[0] == 1 and action != None:
+            if action == "scroll1":
+                skill = mousePos[0]
+            elif action == "scroll2":
+                defensiveness = mousePos[0]
+            elif action == "scroll3":
+                aggressiveness = mousePos[0]
 
-def findNextOpenRow(board, col):
-    for row in range(boardRows):
-        if board[row][col] == 0:
-            return row
-
-
-def winningMove(board, piece):
-    # Horizontal ↔
-    for col in range(boardCols - 3):
-        for row in range(boardRows):
-            if board[row][col] == piece and board[row][col + 1] == piece and board[row][col + 2] == piece and \
-                    board[row][col + 3] == piece:
-                return True
-    # Vertical ↕
-    for col in range(boardCols):
-        for row in range(boardRows - 3):
-            if board[row][col] == piece and board[row + 1][col] == piece and board[row + 2][col] == piece and \
-                    board[row + 3][col] == piece:
-                return True
-
-    # Positive Diagonals  ↗
-    for col in range(boardCols - 3):
-        for row in range(boardRows - 3):
-            if board[row][col] == piece and board[row + 1][col + 1] == piece and board[row + 2][col + 2] == piece and \
-                    board[row + 3][col + 3] == piece:
-                return True
-
-    # Negative Diagonals  ↖
-    for col in range(boardCols - 3):
-        for row in range(3, boardRows):
-            if board[row][col] == piece and board[row - 1][col + 1] == piece and board[row - 2][col + 2] == piece and \
-                    board[row - 3][col + 3] == piece:
-                return True
-
-def getValidLocations(board):
-	validLocations = []
-	for col in range(boardCols):
-		if checkMove(board, col):
-			validLocations.append(col)
-	return validLocations
+def play():
+    pygame.display.set_caption("Connect Four")
+    startGame(depth, outputDefensiveness, outputAggressiveness)
+    mainMenu()
 
 
-def evaluateWindow(window, piece):
-    score = 0
-    opposingPiece = player
+def settings():
+    pygame.display.set_caption("Settings")
+    while True:
+        global depth, outputDefensiveness, outputAggressiveness
+        screen.fill("black")
+        mousePos = pygame.mouse.get_pos()
 
-    if piece == player:
-        opposingPiece = ai
+        if settingsPage == 1:
+          optionsText = getFont(75).render("AI Settings: ", True, "White")
+          optionsRect = optionsText.get_rect(center=(350, 50))
+          skillText = getFont(45).render("Skill: ", True, "White")
+          skillRect = optionsText.get_rect(center=(300, 150))
+          defensivnessText = getFont(45).render("Defensiveness: ", True, "White")
+          defensivnessRect = optionsText.get_rect(center=(300, 300))
+          aggressivenessText = getFont(45).render("Aggressiveness: ", True, "White")
+          aggressivenessRect = optionsText.get_rect(center=(300, 450))
+          screen.blit(optionsText, optionsRect)
+          screen.blit(skillText, skillRect)
+          screen.blit(defensivnessText, defensivnessRect)
+          screen.blit(aggressivenessText, aggressivenessRect)
+        elif settingsPage == 2:
+          optionsText = getFont(75).render("Visual Settings: ", True, "White")
+          optionsRect = optionsText.get_rect(center=(350, 50))
+          skillText = getFont(45).render("Evaluation Bar", True, "White")
+          skillRect = optionsText.get_rect(center=(200, 150))
+          screen.blit(optionsText, optionsRect)
 
-    if window.count(piece) == 4:
-        score += 100
-    elif window.count(piece) == 3 and window.count(empty) == 1:
-        score += 5
-    elif window.count(piece) == 2 and window.count(empty) == 2:
-        score += 2
+        optionsBack = Button(image=None, pos=(350, 630),
+                             textInput="BACK", font=getFont(75), baseColor="White", hoveringColor="Green")
 
-    if window.count(opposingPiece) == 4:
-        score -= 100
-    elif window.count(opposingPiece) == 3 and window.count(empty) == 1:
-        score -= 5
-    elif window.count(opposingPiece) == 2 and window.count(empty) == 2:
-        score -= 2
+        if settingsPage == 1:
+          # Skill
+          Button2(screen, 30, 200, 400, 2, (255, 255, 255), action="scroll1")
+          pygame.draw.rect(screen, (255, 255, 255), [skill, 200 - 12, 10, 24])
+          depth = round((skill / 100 + 0.7), 0)
+          renderText(screen, (255, 255, 255), str(depth), 470, 180, 45)
+  
+          # Defensiveness
+          Button2(screen, 30, 350, 400, 2, (255, 255, 255), action="scroll2")
+          pygame.draw.rect(screen, (255, 255, 255), [defensiveness, 350 - 12, 10, 24])
+          outputDefensiveness = round((defensiveness / 100 + 0.7), 0)
+          renderText(screen, (255, 255, 255), str(outputDefensiveness), 470, 330, 45)
+  
+          # Agressiveness
+          Button2(screen, 30, 500, 400, 2, (255, 255, 255), action="scroll3")
+          pygame.draw.rect(screen, (255, 255, 255), [aggressiveness, 500 - 12, 10, 24])
+          outputAggressiveness = round((aggressiveness / 100 + 0.7), 0)
+          renderText(screen, (255, 255, 255), str(outputAggressiveness), 470, 480, 45)
+        elif settingsPage == 2:
+          evalBarToggle = Button(image=pygame.image.load("menuRectangle.png"), pos=(400, 150), textInput="", font=getFont(75), baseColor="White", hoveringColor="Green")
 
-    return score
+          evalBarToggle.changeColor(mousePos)
+          evalBarToggle.update(screen)
 
+        optionsBack.changeColor(mousePos)
+        optionsBack.update(screen)
 
-def evaluateBoard(board, piece):
-    score = 0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if optionsBack.checkForInput(mousePos):
+                    mainMenu()
 
-    # Score center col because the center is the most important col on the board
-    centerArray = [int(i) for i in list(board[:, boardCols // 2])]
-    leftArray = [int(i) for i in list(board[:, boardCols // 2 - 1])]
-    rightArray = [int(i) for i in list(board[:, boardCols // 2 + 1])]
-    centerCount = centerArray.count(piece)
-    leftCount = leftArray.count(piece)
-    rightCount = rightArray.count(piece)
-    score += centerCount * 2
-    score += leftCount * 1
-    score += rightCount * 1
-
-    # Score horizontal
-    for r in range(boardRows):
-        rowArray = [int(i) for i in list(board[r, :])]
-        for c in range(boardCols - 3):
-            window = rowArray[c: c + windowLength]
-            score += evaluateWindow(window, piece)
-
-    # Score vertical
-    for c in range(boardCols):
-        colArray = [int(i) for i in list(board[:, c])]
-        for r in range(boardRows - 3):
-            window = colArray[r: r + windowLength]
-            score += evaluateWindow(window, piece)
-
-    # Score posiive sloped diagonal
-    for r in range(boardRows - 3):
-        for c in range(boardCols - 3):
-            window = [board[r + i][c + i] for i in range(windowLength)]
-            score += evaluateWindow(window, piece)
-
-    for r in range(boardRows - 3):
-        for c in range(boardCols - 3):
-            window = [board[r + 3 - i][c + i] for i in range(windowLength)]
-            score += evaluateWindow(window, piece)
-
-    return score
-
-
-def minimax(board, depth, piece, alpha, beta):
-    score = 0
-    opposingPiece = player
-    validLocations = getValidLocations(board)
-
-    if piece == player:
-        opposingPiece = ai
-
-    if winningMove(board, piece) or winningMove(board, opposingPiece) or len(getValidLocations(board)) == 0 or depth == 0:
-        if len(getValidLocations(board)) == 0:
-            return None, 0
-        else:
-            return None, evaluateBoard(board, player)  # Always evaluate player
-    else:
-        if piece == ai:
-            score = 1000
-            boardCopy = np.copy(board)
-            column = random.choice(validLocations)
-
-
-            for col in validLocations:
-                boardCopy2 = np.copy(boardCopy)
-                row = findNextOpenRow(board, col)
-                movePiece(boardCopy2, row, col, ai)
-                newScore = minimax(boardCopy2, depth - 1, player, -1000, 1000)[1]
-
-                if newScore < score:
-                    score = newScore
-                    column = col
-
-                score = min(newScore, score)
-                beta = min(beta, score)
-
-                if alpha >= beta:
-                    break
-            return column, score
-        else:
-            score = -1000
-            boardCopy = np.copy(board)
-            column = random.choice(validLocations)
-
-            for col in validLocations:
-                boardCopy2 = np.copy(boardCopy)
-                row = findNextOpenRow(board, col)
-                movePiece(boardCopy2, row, col, player)
-                newScore = minimax(boardCopy2, depth - 1, ai, -1000, 1000)[1]
-
-                if newScore > score:
-                    score = newScore
-                    column = col
-
-                score = max(newScore, score)
-                alpha = max(alpha, score)
-
-                if alpha >= beta:
-                    break
-
-            return column, score
-
-def drawBoard(board):
-    for c in range(boardCols):
-        for r in range(boardRows):
-            pygame.draw.rect(screen, blueColor, (c * squareSize, r * squareSize + squareSize, squareSize, squareSize))
-            pygame.draw.circle(screen, blackColor, (
-            int(c * squareSize + squareSize / 2), int(r * squareSize + squareSize + squareSize / 2)), pieceRadius)
-
-    for c in range(boardCols):
-        for r in range(boardRows):
-            if board[r][c] == 1:
-                pygame.draw.circle(screen, yellowColor, (
-                int(c * squareSize + squareSize / 2), screenHeight - int(r * squareSize + squareSize / 2)), pieceRadius)
-            elif board[r][c] == 2:
-                pygame.draw.circle(screen, redColor, (
-                int(c * squareSize + squareSize / 2), screenHeight - int(r * squareSize + squareSize / 2)), pieceRadius)
-    pygame.display.update()
-
-
-def renderText(screen, color, text, xPos):
-    label = font.render(text, 1, color)
-    screen.blit(label, (xPos, 10))
-
-#def endGame(screen, gameOver):
-#    gameOver = True
- #   renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
-  #  pygame.time.wait(3000)
-   # sys.exit()
-
-
-
-board = createBoard()
-screen = pygame.display.set_mode(screenSize)
-drawBoard(board)
-
-# Main Loop
-while not gameOver:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()
-
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_r:
-                board = np.zeros((boardRows, boardCols))
-                turn = 0
-                drawBoard(board)
-
-        elif event.type == pygame.MOUSEMOTION:
-            pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
-            posx = event.pos[0]
-            if turn == 2:
-                pygame.draw.circle(screen, redColor, (posx, int(squareSize / 2)), pieceRadius)
-            else:
-                pygame.draw.circle(screen, yellowColor, (posx, int(squareSize / 2)), pieceRadius)
         pygame.display.update()
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            # Player 1
-            if turn == player:
-                pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
-                # Getting Place To Move To
-                mousePosX = event.pos[0]
-                col = int(math.floor(mousePosX / squareSize))
+def mainMenu():
+    global screen
+    screen = pygame.display.set_mode((800, 700))
 
-                # Moving Piece
-                if checkMove(board, col):
-                    row = findNextOpenRow(board, col)
-                    movePiece(board, row, col, 1)
+    while True:
+        screen.fill("black")
+        mousePos = pygame.mouse.get_pos()
 
-                    if winningMove(board, 1):
-                        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
-                        gameOver = True
+        menuText1 = getFont(100).render("Connect Four", True, (255, 255, 255))
+        menuRect1 = menuText1.get_rect(center=(350, 50))
+        menuText2 = getFont(100).render("Main Menu", True, (255, 255, 255))
+        menuRect2 = menuText2.get_rect(center=(375, 150))
 
-                drawBoard(board)
+        playButton = Button(image=pygame.image.load("menuRectangle.png"), pos=(350, 300),
+                            textInput="Play", font=getFont(75), baseColor="White", hoveringColor="Green")
+        settingsButton = Button(image=pygame.image.load("menuRectangle.png"), pos=(350, 450),
+                               textInput="Settings", font=getFont(75), baseColor="White", hoveringColor="Green")
+        quitButton = Button(image=pygame.image.load("menuRectangle.png"), pos=(350, 600),
+                            textInput="Quit", font=getFont(75), baseColor="White", hoveringColor="Green")
 
-                # Changing Turns
-                turn = 2
-                #print(np.flip(board, 0))
+        screen.blit(menuText1, menuRect1)
+        screen.blit(menuText2, menuRect2)
 
-            # Player 2
-            if turn == ai and not gameOver:
-                pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
-                # Getting Place To Move To
-                mousePosX = event.pos[0]
-                col, eval = minimax(board, defaultDepth, ai, -1000, 1000)
+        for button in [playButton, settingsButton, quitButton]:
+            button.changeColor(mousePos)
+            button.update(screen)
 
-                # Moving Piece
-                if checkMove(board, col):
-                    row = findNextOpenRow(board, col)
-                    movePiece(board, row, col, ai)
+        eventList = pygame.event.get()
 
-                    if winningMove(board, ai):
-                           renderText(screen, redColor, "PLAYER 2 WINS!!!", 85)
-                           gameOver = True
-                    drawBoard(board)
+        for event in eventList:
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if playButton.checkForInput(mousePos):
+                    play()
+                if settingsButton.checkForInput(mousePos):
+                    settings()
+                if quitButton.checkForInput(mousePos):
+                    pygame.quit()
+                    sys.exit()
 
-                    # Changing Turns
-                    turn = 1
-                    #print(np.flip(board, 0))
-    if gameOver:
-        gameOver = True
-        renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85)
-        pygame.time.wait(3000)
-        sys.exit()
+        pygame.display.update()
+
+
+mainMenu()
