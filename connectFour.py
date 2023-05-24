@@ -5,7 +5,7 @@ import pygame
 import random
 from pygame.locals import *
 
-def startGame(defaultDepth, defensiveness, agressiveness):
+def startGame(defaultDepth, defensiveness, agressiveness, invertMinimax):
     gameOver = False
     turn = 1
     player = 0
@@ -94,19 +94,34 @@ def startGame(defaultDepth, defensiveness, agressiveness):
         if piece == player:
             opposingPiece = ai
 
-        if window.count(piece) == 4:
-            score += (500 * defensiveness)
-        elif window.count(piece) == 3 and window.count(empty) == 1:
-            score += (5 * defensiveness)
-        elif window.count(piece) == 2 and window.count(empty) == 2:
-            score += (2 * defensiveness)
+        if invertMinimax:
+            if window.count(piece) == 4:
+                score -= (500 * defensiveness)
+            elif window.count(piece) == 3 and window.count(empty) == 1:
+                score -= (5 * defensiveness)
+            elif window.count(piece) == 2 and window.count(empty) == 2:
+                score -= (2 * defensiveness)
 
-        if window.count(opposingPiece) == 4:
-            score -= (100 * agressiveness)
-        elif window.count(opposingPiece) == 3 and window.count(empty) == 1:
-            score -= (2.5 * agressiveness) if totalMoves < 10 else ((5 + (totalMoves / 2)) * agressiveness)
-        elif window.count(opposingPiece) == 2 and window.count(empty) == 2:
-            score -= (1 * agressiveness) if totalMoves < 10 else ((2 + (totalMoves / 2)) * agressiveness)
+            if window.count(opposingPiece) == 4:
+                score += (100 * agressiveness)
+            elif window.count(opposingPiece) == 3 and window.count(empty) == 1:
+                score += (2.5 * agressiveness) if totalMoves < 10 else ((5 + (totalMoves / 2)) * agressiveness)
+            elif window.count(opposingPiece) == 2 and window.count(empty) == 2:
+                score += (1 * agressiveness) if totalMoves < 10 else ((2 + (totalMoves / 2)) * agressiveness)
+        else:
+            if window.count(piece) == 4:
+                score += (500 * defensiveness)
+            elif window.count(piece) == 3 and window.count(empty) == 1:
+                score += (5 * defensiveness)
+            elif window.count(piece) == 2 and window.count(empty) == 2:
+                score += (2 * defensiveness)
+
+            if window.count(opposingPiece) == 4:
+                score -= (100 * agressiveness)
+            elif window.count(opposingPiece) == 3 and window.count(empty) == 1:
+                score -= (2.5 * agressiveness) if totalMoves < 10 else ((5 + (totalMoves / 2)) * agressiveness)
+            elif window.count(opposingPiece) == 2 and window.count(empty) == 2:
+                score -= (1 * agressiveness) if totalMoves < 10 else ((2 + (totalMoves / 2)) * agressiveness)
 
         return score
 
@@ -164,50 +179,50 @@ def startGame(defaultDepth, defensiveness, agressiveness):
                 return None, 0
             else:
                 return None, evaluateBoard(board, player)  # Always evaluate player
+        if piece == player:
+            score = -10000
+            boardCopy = np.copy(board)
+            column = random.choice(validLocations)
+
+            for col in validLocations:
+                boardCopy2 = np.copy(boardCopy)
+                row = findNextOpenRow(board, col)
+                movePiece(boardCopy2, row, col, player)
+                newScore = minimax(boardCopy2, depth - 1, ai, alpha, beta)[1]
+
+                if newScore > score:
+                    score = newScore
+                    column = col
+
+                score = max(newScore, score)
+                alpha = max(alpha, score)
+
+                if alpha >= beta:
+                    break
+
+            return column, score
         else:
-            if piece == ai:
-                score = 1000
-                boardCopy = np.copy(board)
-                column = random.choice(validLocations)
+            score = 10000
+            boardCopy = np.copy(board)
+            column = random.choice(validLocations)
 
-                for col in validLocations:
-                    boardCopy2 = np.copy(boardCopy)
-                    row = findNextOpenRow(board, col)
-                    movePiece(boardCopy2, row, col, ai)
-                    newScore = minimax(boardCopy2, depth - 1, player, alpha, beta)[1]
+            for col in validLocations:
+                boardCopy2 = np.copy(boardCopy)
+                row = findNextOpenRow(board, col)
+                movePiece(boardCopy2, row, col, ai)
+                newScore = minimax(boardCopy2, depth - 1, player, alpha, beta)[1]
 
-                    if newScore < score:
-                        score = newScore
-                        column = col
+                if newScore < score:
+                    score = newScore
+                    column = col
 
-                    score = min(newScore, score)
-                    beta = min(beta, score)
+                score = min(newScore, score)
+                beta = min(beta, score)
 
-                    if alpha >= beta:
-                        break
-                return column, score
-            else:
-                score = -1000
-                boardCopy = np.copy(board)
-                column = random.choice(validLocations)
+                if alpha >= beta:
+                    break
 
-                for col in validLocations:
-                    boardCopy2 = np.copy(boardCopy)
-                    row = findNextOpenRow(board, col)
-                    movePiece(boardCopy2, row, col, player)
-                    newScore = minimax(boardCopy2, depth - 1, ai, alpha, beta)[1]
-
-                    if newScore > score:
-                        score = newScore
-                        column = col
-
-                    score = max(newScore, score)
-                    alpha = max(alpha, score)
-
-                    if alpha >= beta:
-                        break
-
-                return column, score
+            return column, score
 
     def drawBoard(board):
         for c in range(boardCols):
@@ -237,18 +252,18 @@ def startGame(defaultDepth, defensiveness, agressiveness):
         screen.blit(label, (xPos, 10))
 
     def drawEvaluationBar(eval):
-        if eval >= 0 and eval <= 300:
+        if eval >= 0 and eval <= 400:
             pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2) - eval), 75, eval))
             renderText(screen, whiteColor, ("+" + str(eval)), 705, smallerFont)
-        elif eval <= 0 and eval >= -300:
-            pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2)), 75, abs(eval)))
-            renderText(screen, whiteColor, str(eval), 705, smallerFont)
-        elif eval > 350:
+        elif eval <= 0 and eval >= -400:
+            pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2)), 75, abs(eval * 2)))
+            renderText(screen, whiteColor, str(eval * defensiveness * (agressiveness * 1.1)), 705, smallerFont)
+        elif eval > 300:
             pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2) - 300), 75, 300))
             renderText(screen, whiteColor, ("+" + str(eval)), 705, smallerFont)
-        else:
-            pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2)), 75, -300))
-            renderText(screen, whiteColor, str(eval), 705, smallerFont)
+        elif eval < -400:
+            pygame.draw.rect(screen, whiteColor, Rect(700, ((screenHeight / 2) + (squareSize / 2)), 75, -400))
+            renderText(screen, whiteColor, str(eval * defensiveness * (agressiveness * 1.1)), 705, smallerFont)
         print(eval)
 
     # Main Loop
@@ -277,7 +292,7 @@ def startGame(defaultDepth, defensiveness, agressiveness):
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 pygame.draw.rect(screen, blackColor, (700, 0, 75, 100))
-                drawEvaluationBar(minimax(board, 4, player, -1000, 1000)[1])
+                drawEvaluationBar(minimax(board, 4, player, -10000, 10000)[1])
 
                 # Player 1
                 if turn == player:
@@ -294,7 +309,7 @@ def startGame(defaultDepth, defensiveness, agressiveness):
                         if winningMove(board, 1):
                             renderText(screen, yellowColor, "PLAYER 1 WINS!!!", 85, pyFont)
                             pygame.draw.rect(screen, blackColor, (700, 0, 75, 100))
-                            drawEvaluationBar(minimax(board, 4, ai, -1000, 1000)[1])
+                            drawEvaluationBar(minimax(board, 4, ai, -10000, 10000)[1])
                             gameOver = True
 
                     drawBoard(board)
@@ -309,7 +324,7 @@ def startGame(defaultDepth, defensiveness, agressiveness):
                     pygame.draw.rect(screen, blackColor, (0, 0, screenWidth, squareSize))
                     # Getting Place To Move To
                     mousePosX = event.pos[0]
-                    col, eval = minimax(board, defaultDepth, ai, -1000, 1000)
+                    col, eval = minimax(board, defaultDepth, ai, -10000, 10000)
 
                     # Moving Piece
                     if checkMove(board, col):
@@ -319,7 +334,7 @@ def startGame(defaultDepth, defensiveness, agressiveness):
                         if winningMove(board, ai):
                                renderText(screen, redColor, "AI WINS!!!", 165, pyFont)
                                pygame.draw.rect(screen, blackColor, (700, 0, 75, 100))
-                               drawEvaluationBar(minimax(board, 4, ai, -1000, 1000)[1])
+                               drawEvaluationBar(minimax(board, 4, ai, -10000, 10000)[1])
                                gameOver = True
                         drawBoard(board)
 
